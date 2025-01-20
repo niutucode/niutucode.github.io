@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon-big.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-big.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-small.png">
+  <link rel="mask-icon" href="/images/favicon-big.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/themes/orange/pace-theme-bounce.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"niutucode.github.io","root":"/","images":"/images","scheme":"Mist","darkmode":false,"version":"8.22.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":true,"nav":null,"count":true,"card_post_count":false,"activeClass":"gitalk"},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":3,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="分布式ID的4种解决方案">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式ID的实现方案">
+<meta property="og:url" content="https://niutucode.github.io/2025/01/20/%E5%88%86%E5%B8%83%E5%BC%8FID%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88/index.html">
+<meta property="og:site_name" content="niutucode">
+<meta property="og:description" content="分布式ID的4种解决方案">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://technology-sharing-1258823864.cos.ap-shanghai.myqcloud.com/image/%25E5%2588%2586%25E5%25B8%2583%25E5%25BC%258FID%25E7%259A%2584%25E5%25AE%259E%25E7%258E%25B0%25E6%2596%25B9%25E6%25A1%2588-01.png">
+<meta property="og:image" content="https://technology-sharing-1258823864.cos.ap-shanghai.myqcloud.com/image/%25E5%2588%2586%25E5%25B8%2583%25E5%25BC%258FID%25E7%259A%2584%25E5%25AE%259E%25E7%258E%25B0%25E6%2596%25B9%25E6%25A1%2588-02.png">
+<meta property="og:image" content="https://technology-sharing-1258823864.cos.ap-shanghai.myqcloud.com/image/%25E5%2589%25AF%25E6%259C%25AC-%25E5%2588%2586%25E5%25B8%2583%25E5%25BC%258FID%25E7%259A%2584%25E5%25AE%259E%25E7%258E%25B0%25E6%2596%25B9%25E6%25A1%2588-03.png">
+<meta property="og:image" content="https://technology-sharing-1258823864.cos.ap-shanghai.myqcloud.com/image/%25E5%2588%2586%25E5%25B8%2583%25E5%25BC%258FID%25E7%259A%2584%25E5%25AE%259E%25E7%258E%25B0%25E6%2596%25B9%25E6%25A1%2588-04.png">
+<meta property="og:image" content="https://technology-sharing-1258823864.cos.ap-shanghai.myqcloud.com/image/%25E5%2588%2586%25E5%25B8%2583%25E5%25BC%258FID%25E7%259A%2584%25E5%25AE%259E%25E7%258E%25B0%25E6%2596%25B9%25E6%25A1%2588-05.png">
+<meta property="article:published_time" content="2025-01-20T06:55:32.000Z">
+<meta property="article:modified_time" content="2025-01-20T07:28:30.175Z">
+<meta property="article:author" content="niutucode">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="微服务">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://technology-sharing-1258823864.cos.ap-shanghai.myqcloud.com/image/%25E5%2588%2586%25E5%25B8%2583%25E5%25BC%258FID%25E7%259A%2584%25E5%25AE%259E%25E7%258E%25B0%25E6%2596%25B9%25E6%25A1%2588-01.png">
+
+
+<link rel="canonical" href="https://niutucode.github.io/2025/01/20/%E5%88%86%E5%B8%83%E5%BC%8FID%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://niutucode.github.io/2025/01/20/%E5%88%86%E5%B8%83%E5%BC%8FID%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88/","path":"2025/01/20/分布式ID的实现方案/","title":"分布式ID的实现方案"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>分布式ID的实现方案 | niutucode</title>
+  
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?1539523e9b8b6cad58fdd201fdcf6494"></script>
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="niutucode" type="application/atom+xml">
+<style>.darkmode--activated{--body-bg-color:#282828;--content-bg-color:#333;--card-bg-color:#555;--text-color:#ccc;--blockquote-color:#bbb;--link-color:#ccc;--link-hover-color:#eee;--brand-color:#ddd;--brand-hover-color:#ddd;--table-row-odd-bg-color:#282828;--table-row-hover-bg-color:#363636;--menu-item-bg-color:#555;--btn-default-bg:#222;--btn-default-color:#ccc;--btn-default-border-color:#555;--btn-default-hover-bg:#666;--btn-default-hover-color:#ccc;--btn-default-hover-border-color:#666;--highlight-background:#282b2e;--highlight-foreground:#a9b7c6;--highlight-gutter-background:#34393d;--highlight-gutter-foreground:#9ca9b6}.darkmode--activated img{opacity:.75}.darkmode--activated img:hover{opacity:.9}.darkmode--activated code{color:#69dbdc;background:0 0}button.darkmode-toggle{z-index:9999}.darkmode-ignore,img{display:flex!important}.beian img{display:inline-block!important}</style></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">niutucode</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8FID%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88"><span class="nav-text">分布式ID的实现方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E4%BB%80%E4%B9%88%E6%98%AF%E5%88%86%E5%B8%83%E5%BC%8FID"><span class="nav-text">1. 什么是分布式ID</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%88%86%E5%B8%83%E5%BC%8FID%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88"><span class="nav-text">2. 分布式ID的实现方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%9F%BA%E4%BA%8EUUID%E7%94%9F%E6%88%90"><span class="nav-text">1. 基于UUID生成</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%9F%BA%E4%BA%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E7%94%9F%E6%88%90"><span class="nav-text">2. 基于数据库生成</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-%E5%9F%BA%E4%BA%8E%E7%89%B9%E5%AE%9A%E8%B5%B7%E5%A7%8B%E5%80%BC%E5%92%8C%E6%AD%A5%E9%95%BF%E5%88%86%E9%85%8DID"><span class="nav-text">1. 基于特定起始值和步长分配ID</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-%E5%9F%BA%E4%BA%8E%E7%89%B9%E5%AE%9A%E6%95%B0%E6%8D%AE%E8%A1%A8%E5%88%86%E9%85%8DID"><span class="nav-text">2. 基于特定数据表分配ID</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%9F%BA%E4%BA%8ERedis%E7%94%9F%E6%88%90"><span class="nav-text">3. 基于Redis生成</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E5%9F%BA%E4%BA%8E%E9%9B%AA%E8%8A%B1%E7%AE%97%E6%B3%95%E7%94%9F%E6%88%90"><span class="nav-text">4. 基于雪花算法生成</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="niutucode"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">niutucode</p>
+  <div class="site-description" itemprop="description">行到水穷处 坐看云起时</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">1</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/niutucode" title="github → https:&#x2F;&#x2F;github.com&#x2F;niutucode" rel="noopener me" target="_blank"><i class="fa github fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_37190972" title="csdn → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_37190972" rel="noopener me" target="_blank"><i class="fa csdn fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.zhihu.com/people/niutucode" title="知乎 → https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;niutucode" rel="noopener me" target="_blank"><i class="fa zhihu fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://juejin.cn/user/138986785617914" title="掘金 → https:&#x2F;&#x2F;juejin.cn&#x2F;user&#x2F;138986785617914" rel="noopener me" target="_blank"><i class="fa juejin fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml" rel="noopener me"><i class="fa rss fa-fw"></i></a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+        <div class="pjax">
+        </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://niutucode.github.io/2025/01/20/%E5%88%86%E5%B8%83%E5%BC%8FID%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="niutucode">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="niutucode">
+      <meta itemprop="description" content="行到水穷处 坐看云起时">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="分布式ID的实现方案 | niutucode">
+      <meta itemprop="description" content="分布式ID的4种解决方案">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          分布式ID的实现方案
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2025-01-20 14:55:32 / 修改时间：15:28:30" itemprop="dateCreated datePublished" datetime="2025-01-20T14:55:32+08:00">2025-01-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%90%8E%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">后端</span></a>
+        </span>
+    </span>
+
+  
+    <span id="/2025/01/20/%E5%88%86%E5%B8%83%E5%BC%8FID%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88/" class="post-meta-item leancloud_visitors" data-flag-title="分布式ID的实现方案" title="阅读次数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span class="leancloud-visitors-count"></span>
+    </span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>4.2k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>4 分钟</span>
+    </span>
+</div>
+
+            <div class="post-description">分布式ID的4种解决方案</div>
+        </div>
+      </header>
+
+    
+    
+    
+
+    <div class="post-body" itemprop="articleBody"><h2 id="分布式ID的实现方案"><a href="#分布式ID的实现方案" class="headerlink" title="分布式ID的实现方案"></a>分布式ID的实现方案</h2><h3 id="1-什么是分布式ID"><a href="#1-什么是分布式ID" class="headerlink" title="1. 什么是分布式ID"></a>1. 什么是分布式ID</h3><p>​	对于低访问量的系统来说，无需对数据库进行分库分表，单库单表完全可以应对，但是随着系统访问量的上升，单表单库的访问压力逐渐增大，这时候就需要采用分库分表的方案，来缓解压力。</p>
+<p>​	在实际的业务场景中，我们常常需要一个唯一ID来确保数据的唯一性，对于单表单库来说，我们通常采用自增ID来作为标识，但是分库分表之后，自增ID的唯一性就无法保证。</p>
+<img src="https://technology-sharing-1258823864.cos.ap-shanghai.myqcloud.com/image/%25E5%2588%2586%25E5%25B8%2583%25E5%25BC%258FID%25E7%259A%2584%25E5%25AE%259E%25E7%258E%25B0%25E6%2596%25B9%25E6%25A1%2588-01.png" alt="分布式ID的实现方案-01" style="zoom: 33%;" />
+
+<p>​	如上图所示，同一业务下的3张数据表，可能存在相同的ID，导致无法根据ID来确保数据的唯一性，因此，在分库分表的架构中，我们就需要使用分布式ID，来确保同一业务下的多张数据表或者多张数据库，数据的唯一性。</p>
+<h3 id="2-分布式ID的实现方案"><a href="#2-分布式ID的实现方案" class="headerlink" title="2. 分布式ID的实现方案"></a>2. 分布式ID的实现方案</h3><h4 id="1-基于UUID生成"><a href="#1-基于UUID生成" class="headerlink" title="1. 基于UUID生成"></a>1. 基于UUID生成</h4><p>​	UUID是一组由32位的16进制数据所构成，所以可以生成16^32个数据，也就是说，平均每纳秒可以生成1兆组数据，约100亿年才可以使用完。</p>
+<p>​	UUID的格式为<code>8-4-4-4-12</code>，如：<code>62f51e7e-a3ca-45ab-bf3f-2c3279f2991e</code>，在JDK中，可以通过如下方式生成一组UUID：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="type">UUID</span> <span class="variable">uuid</span> <span class="operator">=</span> UUID.randomUUID();</span><br><span class="line">    System.out.println(<span class="string">&quot;UUID：&quot;</span> + uuid);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>UUID：e27cc5fa-8655-4095-b682-e12d178791dd</p>
+</blockquote>
+<p>​	虽然UUID的实现方案简单便捷，但是由于其长度较长，在数据库中存储会占用过多资源，并且如果作为主键，由于UUID的无序性，会导致其存储的数据位置频繁变动，对性能影响较大。</p>
+<h4 id="2-基于数据库生成"><a href="#2-基于数据库生成" class="headerlink" title="2. 基于数据库生成"></a>2. 基于数据库生成</h4><h5 id="1-基于特定起始值和步长分配ID"><a href="#1-基于特定起始值和步长分配ID" class="headerlink" title="1. 基于特定起始值和步长分配ID"></a>1. 基于特定起始值和步长分配ID</h5><p>​	例如现在分了3张表，分别是table_1、table_2、table_3，那么可以给table_1分配自增ID的起始值是1；为table_2分配自增ID的起始值是2，为table_3分配自增ID的起始值是3，步长均为3，这样同一业务下的这3张表，也可以确保其ID的唯一性。</p>
+<blockquote>
+<p>以MySQL为例，可以在MySQL的配置文件中，设置自增ID起始值和步长</p>
+<p>自增ID起始值：<code>auto_increment_increment = value </code></p>
+<p>自增ID步长：<code>auto_increment_offset = value</code></p>
+</blockquote>
+<img src="https://technology-sharing-1258823864.cos.ap-shanghai.myqcloud.com/image/%25E5%2588%2586%25E5%25B8%2583%25E5%25BC%258FID%25E7%259A%2584%25E5%25AE%259E%25E7%258E%25B0%25E6%2596%25B9%25E6%25A1%2588-02.png" style="zoom: 33%;" />
+
+<p>​	以上方式，虽然可以实现全局唯一ID的生成，但是该方案高度依赖数据库，一旦数据库发生异常，便直接影响业务，并且在主库发生异常，主从切换不一致时，可能会出现ID重复的异常。</p>
+<h5 id="2-基于特定数据表分配ID"><a href="#2-基于特定数据表分配ID" class="headerlink" title="2. 基于特定数据表分配ID"></a>2. 基于特定数据表分配ID</h5><p>​	可以新建一张数据表，专门存放当前最新的ID，每次需要获取ID值时，都将该数据表中的ID自增一次，并返回最新的ID值。</p>
+<img src="https://technology-sharing-1258823864.cos.ap-shanghai.myqcloud.com/image/%25E5%2589%25AF%25E6%259C%25AC-%25E5%2588%2586%25E5%25B8%2583%25E5%25BC%258FID%25E7%259A%2584%25E5%25AE%259E%25E7%258E%25B0%25E6%2596%25B9%25E6%25A1%2588-03.png" alt="副本-分布式ID的实现方案-03" style="zoom: 33%;" />
+
+<p>​	以上方式，同样可以生成全局唯一ID，但是也同样高度依赖数据库，在进行实际的业务场景中，增加了一次与业务无关的读写操作，在高并发场景下，ID数据表的压力很大，对系统的QPS影响较大，并且当数据库发生异常时，也会直接影响原有的业务执行。</p>
+<h4 id="3-基于Redis生成"><a href="#3-基于Redis生成" class="headerlink" title="3. 基于Redis生成"></a>3. 基于Redis生成</h4><p>​	可以通过Redis的<code>INCR</code>和<code>INCRBY</code>指令来实行分布式ID的生成，每次请求时，都从Redis中获取一次分布式ID。</p>
+<img src="https://technology-sharing-1258823864.cos.ap-shanghai.myqcloud.com/image/%25E5%2588%2586%25E5%25B8%2583%25E5%25BC%258FID%25E7%259A%2584%25E5%25AE%259E%25E7%258E%25B0%25E6%2596%25B9%25E6%25A1%2588-04.png" alt="分布式ID的实现方案-04" style="zoom: 33%;" />
+
+<p>​	当QPS较小时，此种方案可以应对，但是对于高并发场景，此种方案对于单台Redis服务器的性能要求较高，因此，需要搭建Redis集群，来缓解单台Redis服务器的压力，但是对于Redis集群来说，分布式ID的生成又会出现MySQL集群出现的问题，并且此种方案同样高度依赖Redis，一旦Redis服务器出现异常，就会影响到整个业务流程，同时此种方案引入了Redis中间件，增加了系统的复杂度。</p>
+<h4 id="4-基于雪花算法生成"><a href="#4-基于雪花算法生成" class="headerlink" title="4. 基于雪花算法生成"></a>4. 基于雪花算法生成</h4><p>​	雪花算法是由Twitter开源的一个分布式ID生成的解决方案，该分布式ID总共占用<code>64bit</code>存储空间，对于Java来说，正好使用<code>long</code>类型来进行存储。</p>
+<blockquote>
+<p><code>第1位</code>：始终是0，可以看做是符号位，不使用。</p>
+<p><code>第2-42位</code>：总共41位，表示时间戳，单位是毫秒，总共可以表示2^41个数字，即69年的时间。</p>
+<p><code>第43-52位</code>：总共10位，表示机器数，总共可以表示2^10&#x3D;1024台机器，通常情况下，不需要部署这么多台机器，因此，一般将前5位表示数据中心，后5位表示机器数，即总共可以表示32个数据中心，每个数据中心有32台机器。</p>
+<p><code>第53-64位</code>：总共12位，表示自增序列，可以表示2^12&#x3D;4096个数。</p>
+</blockquote>
+<p>​	这样划分之后，相当于在1ms之内，一个数据中心的一台服务器中，可以产生4096个不重复的有序ID。</p>
+<img src="https://technology-sharing-1258823864.cos.ap-shanghai.myqcloud.com/image/%25E5%2588%2586%25E5%25B8%2583%25E5%25BC%258FID%25E7%259A%2584%25E5%25AE%259E%25E7%258E%25B0%25E6%2596%25B9%25E6%25A1%2588-05.png" alt="分布式ID的实现方案-05" style="zoom: 33%;" />
+
+<p>​	具体的Java代码实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/***</span></span><br><span class="line"><span class="comment"> * 雪花算法</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> 天天向上</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Snowflake</span> &#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 开始时间戳</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">START_TIMESTAMP</span> <span class="operator">=</span> <span class="number">1736820033851L</span>;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 机器位数</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">MACHINE_BIT</span> <span class="operator">=</span> <span class="number">10L</span>;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 序列号位数</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">SEQUENCE_BIT</span> <span class="operator">=</span> <span class="number">12L</span>;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 机器最大值 1023</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">MAX_MACHINE_NUM</span> <span class="operator">=</span> ~(-<span class="number">1L</span> &lt;&lt; MACHINE_BIT);</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 序列号最大值 4095</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">MAX_SEQUENCE</span> <span class="operator">=</span> ~(-<span class="number">1L</span> &lt;&lt; SEQUENCE_BIT);</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 机器标识向左移动的位数</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">MACHINE_LEFT</span> <span class="operator">=</span> SEQUENCE_BIT;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 时间戳向左移动的位数</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">TIMESTAMP_LEFT</span> <span class="operator">=</span> SEQUENCE_BIT + MACHINE_BIT;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 机器ID</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">long</span> machineId;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 序列号</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">long</span> <span class="variable">sequence</span> <span class="operator">=</span> -<span class="number">1L</span>;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 上一次时间戳</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">long</span> <span class="variable">lastTimeStamp</span> <span class="operator">=</span> <span class="number">0L</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 构造器</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> machineId 机器ID</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Snowflake</span><span class="params">(<span class="type">long</span> machineId)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (machineId &gt; MAX_MACHINE_NUM || machineId &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;机器ID不能大于&quot;</span> + MAX_MACHINE_NUM + <span class="string">&quot;或者小于0&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">this</span>.machineId = machineId;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 产生下一个时间戳</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> lastTimeStamp 上一次生成的时间戳</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 下一个时间戳</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="type">long</span> <span class="title function_">nextTimestamp</span><span class="params">(<span class="type">long</span> lastTimeStamp)</span> &#123;</span><br><span class="line">        <span class="type">long</span> <span class="variable">timestamp</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="keyword">while</span> (timestamp &lt;= lastTimeStamp) &#123;</span><br><span class="line">            timestamp = System.currentTimeMillis();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> timestamp;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 获取分布式ID</span></span><br><span class="line"><span class="comment">     * 该方法需线程安全，如果在分布式系统中，应该使用分布式锁来保证该方法的线程安全，如果不设置，在高并发场景中，      * 可能会出现多个线程生成同一ID的异常</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 分布式ID</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="type">long</span> <span class="title function_">nextId</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="type">long</span> <span class="variable">timestamp</span> <span class="operator">=</span> System.currentTimeMillis();</span><br><span class="line">        <span class="keyword">if</span> (timestamp &lt; lastTimeStamp) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;时钟回拨异常&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (timestamp == lastTimeStamp) &#123;</span><br><span class="line">            <span class="comment">// 相同毫秒内，序列号自增</span></span><br><span class="line">            sequence = (sequence + <span class="number">1</span>) &amp; MAX_SEQUENCE;</span><br><span class="line">            <span class="comment">// 同一毫秒的序列数已经达到最大</span></span><br><span class="line">            <span class="keyword">if</span> (sequence == <span class="number">0</span>) &#123;</span><br><span class="line">                timestamp = nextTimestamp(lastTimeStamp);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            sequence = <span class="number">0L</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        lastTimeStamp = timestamp;</span><br><span class="line">        <span class="keyword">return</span> (timestamp - START_TIMESTAMP) &lt;&lt; TIMESTAMP_LEFT | machineId &lt;&lt; MACHINE_LEFT | sequence;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">    <span class="type">Snowflake</span> <span class="variable">snowflake</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Snowflake</span>(<span class="number">0</span>);</span><br><span class="line">    System.out.println(<span class="string">&quot;分布式ID：&quot;</span> + snowflake.nextId());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>分布式ID：9161748250624</p>
+</blockquote>
+<p>​	通过雪花算法生成分布式ID，生成的ID是有序递增的，不依赖于第三方系统，在高并发场景下，依然具有良好的性能，相较于UUID方式生成分布式ID，该方式性能更高，占用空间小，且递增有序，可读性更好。</p>
+<p>​	但是雪花算法也存在一定的局限性，当系统发生时钟回拨时，该方法就会处于不可用的状态，可以使用百度的UidGenerator或者美团的Leaf规避这一风险，在实际的开发中，可以根据需要，选择合适的方案，来实现分布式ID的生成。</p>
+
+    </div>
+
+    
+    
+    
+    
+      <div>
+        <div>
+  
+    <div style="text-align:center;color:#bfbfbf;font-size:16px;">
+      <span>-------- 本文结束 </span>
+      <i class="fa fa-paw"></i>
+      <span> 感谢阅读 --------</span>
+    </div>
+  
+</div>
+      </div>
+     
+
+    <footer class="post-footer">
+            
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>niutucode
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://niutucode.github.io/2025/01/20/%E5%88%86%E5%B8%83%E5%BC%8FID%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88/" title="分布式ID的实现方案">https://niutucode.github.io/2025/01/20/分布式ID的实现方案/</a>
+  </li>
+  <li class="post-copyright-license">
+      <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa blog-footer"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">niutucode</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>站点总字数：</span>
+    <span title="站点总字数">4k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">4 分钟</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa user"></i>
+      </span>
+      <span class="site-uv" title="إجمالي الزوار">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa view"></i>
+      </span>
+      <span class="site-pv" title="إجمالي المشاهدات">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div> 
+<script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment-precise-range-plugin@1.3.0/moment-precise-range.min.js"></script>
+<script>
+  function timer() {
+    var ages = moment.preciseDiff(moment(),moment(20200710,"YYYYMMDD"));
+    ages = ages.replace(/years?/, "年");
+    ages = ages.replace(/months?/, "月");
+    ages = ages.replace(/days?/, "天");
+    ages = ages.replace(/hours?/, "小时");
+    ages = ages.replace(/minutes?/, "分");
+    ages = ages.replace(/seconds?/, "秒");
+    ages = ages.replace(/\d+/g, '<span style="color:#1890ff">$&</span>');
+    div.innerHTML = `本站已运行 ${ages}`;
+  }
+  var div = document.createElement("div");
+  //插入到copyright之后
+  var copyright = document.querySelector(".copyright");
+  document.querySelector(".footer-inner").insertBefore(div, copyright.nextSibling);
+  timer();
+  setInterval("timer()",1000)
+</script>
+
+
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+  <script src="/js/third-party/pace.js"></script>
+
+
+  
+  <script data-pjax async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+  <script class="next-config" data-name="leancloud_visitors" type="application/json">{"enable":true,"app_id":"uMrKVtPCguIUp0M01JpAhVd3-gzGzoHsz","app_key":"p61WfJR7PKoenFDFw3ILx5va","server_url":"https://umrkvtpc.lc-cn-n1-shared.com","security":false}</script>
+  <script src="/js/third-party/statistics/lean-analytics.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/darkmode-js@1.5.7/lib/darkmode-js.min.js"></script>
+
+<script>
+var options = {
+  bottom: '64px',
+  right: '32px',
+  left: 'unset',
+  time: '0.5s',
+  mixColor: 'transparent',
+  backgroundColor: 'transparent',
+  buttonColorDark: '#100f2c',
+  buttonColorLight: '#fff',
+  saveInCookies: true,
+  label: '🌓',
+  autoMatchOsTheme: true
+}
+const darkmode = new Darkmode(options);
+window.darkmode = darkmode;
+darkmode.showWidget();
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"niutucode","repo":"blog-comments","client_id":"Ov23linaAI5JYDqHj8fG","client_secret":"19df37e31fef2f1f6ae8ffc46e90d555eedeaaf0","admin_user":"niutucode","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":"zh-CN","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"28c63c5124695ae4202d02cbe57d3b5d"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+
+  <script async src="/js/cursor/fireworks.js"></script>
+
+
+</body>
+</html>
