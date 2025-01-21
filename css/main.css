@@ -1235,7 +1235,7 @@ pre code {
   vertical-align: middle;
 }
 .links-of-author a::before {
-  background: #2883ff;
+  background: #ffff2a;
   display: inline-block;
   margin-right: 3px;
   transform: translateY(-2px);
@@ -2291,7 +2291,12 @@ pre code {
   padding: 0;
 }
 .category-all-page .category-list-item {
-  margin: 5px 10px;
+  display: block;
+  background-color: #0ad1e5;
+  width: 100px;
+  height: 40px;
+  border-radius: 5px;
+  text-align: center;
 }
 .category-all-page .category-list-count {
   font-size: 0.75em;
@@ -2742,17 +2747,26 @@ header.header {
   margin-top: 40px;
 }
 .post-button {
-  margin-top: 20px;
+  text-align: center;
 }
 .post-button .btn {
-  background: none;
-  border: 0;
-  border-bottom: 2px solid var(--btn-default-border-color);
-  padding: 0;
-  transition-property: border;
+  display: inline-block;
+  padding: 0 20px;
+  font-size: 14px;
+  color: #555;
+  background: #fff;
+  border: 2px solid #555;
+  text-decoration: none;
+  border-radius: 2px;
+  transition-property: background-color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+  transition-delay: 0s;
+  line-height: 2;
 }
 .post-button .btn:hover {
-  border-bottom-color: var(--btn-default-hover-border-color);
+  color: #fff;
+  background: #555;
 }
 header.header {
   margin: 0 auto;
@@ -2928,13 +2942,6 @@ header.header {
   background-size: contain;
   background-repeat: no-repeat;
   margin-bottom: -19px !important;
-  height: 30px;
-  width: 50px;
-}
-.tag {
-  background-image: url("/images/tag.svg");
-  background-size: contain;
-  background-repeat: no-repeat;
   height: 30px;
   width: 50px;
 }
